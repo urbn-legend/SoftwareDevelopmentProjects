@@ -1,43 +1,28 @@
----
-  name: Deploy FastAPI to AWS Lambda
-  on:
-    push:
-      branches:
-        - main
-  jobs:
-    deploy:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v2
-        - name: Configure AWS CLI with GitHub Secrets
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_REGION: ${{ secrets.AWS_REGION }}
-          run: >
-            mkdir -p ~/.aws
-  
-            echo "[default]" > ~/.aws/credentials
-  
-            echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
-  
-            echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
-  
-            echo "[default]" > ~/.aws/config
-  
-            echo "region=$AWS_REGION" >> ~/.aws/config
-        - name: Set up Python
-          uses: actions/setup-python@v3
-          with:
-            python-version: "3.8"
-        - name: Install Dependencies
-          run: pip install fastapi uvicorn mangum boto3
-        - name: Package Application
-          run: zip -r deployment.zip .
-        - name: Deploy to AWS Lambda
-          run: |
-            aws lambda update-function-code \
-              --function-name fastapi-lambda \
-              --zip-file fileb://deployment.zip
-  
+name: Deploy FastAPI to AWS Lambda
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: pip install fastapi uvicorn mangum boto3
+
+      - name: Package application
+        run: |
+          zip -r deployment.zip .
+      
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code \
+          --function-name fastapi-lambda \
+          --zip-file fileb://deployment.zip
